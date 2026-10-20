@@ -9,6 +9,11 @@ locally instead of calling the Flag Service on every request.
 
 ---
 
+https://flag-stream-consumer.onrender.com/health
+https://flag-stream-consumer.onrender.com/v1/flags/<flag_name>?tenantId=<tenantuid>
+https://flag-stream-consumer.onrender.com/v1/flags?tenantId=<tenantuid>
+---
+
                       ┌──────────────────────────────┐
                       │            UI                │
                       │  flag dashboard / toggle     │
