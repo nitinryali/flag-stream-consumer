@@ -20,6 +20,11 @@ services:
     healthCheckPath: /health
     autoDeployTrigger: commit
     envVars:
+      # sync: false means "do not read this value from the repo". Render lists
+      # every such key in the Enter Environment Variables step when the
+      # Blueprint is first synced, and keeps what you type there encrypted.
+      # Later Blueprint syncs never overwrite those values.
+      #
       # Must be the same Redis instance the Flag Service publishes to
       # (Upstash or otherwise). SPRING_DATA_REDIS_URL is also accepted.
       - key: REDIS_URL
