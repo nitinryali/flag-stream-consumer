@@ -9,6 +9,29 @@ locally instead of calling the Flag Service on every request.
 
 ---
 
+                      ┌──────────────────────────────┐
+                      │            UI                │
+                      │  flag dashboard / toggle     │
+                      └───────┬──────────────┬───────┘
+             reads flags      │              │   writes flags
+        GET /v1/flags         │              │   PATCH /flags/{id}
+                              ▼              ▼
+              ┌───────────────────┐   ┌────────────────────┐
+              │ Flag Stream       │   │ Flag Service       │
+              │ Consumer :8002    │   │ :8001              │
+              │                   │   │                    │
+              │ in-memory cache   │   │ auth + flag CRUD   │
+              │ version/tombstone │   │ publisher          │
+              └─────┬───────▲─────┘   └───┬────────────▲───┘
+                    │       │             │            │
+       SUBSCRIBE    │       │  GET /flags │            │ read/write
+       (push)       │       └─────────────┘            │
+                    ▼                    ┌─────────────▼─────┐
+              ┌───────────┐              │  MongoDB Atlas    │
+              │  Redis    │◄─PUBLISH─────┤  tenants/users/   │
+              │  Pub/Sub  │              │  flags            │
+              └───────────┘              └───────────────────┘
+
 ## Overview
 
 |               |                                                                 |
