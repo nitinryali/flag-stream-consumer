@@ -1,0 +1,46 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+#
+# One service: the Flag Stream Consumer. Redis and the Flag Service are managed
+# outside Render and supplied as environment variables, so nothing is
+# provisioned here.
+services:
+  - type: web
+    name: flag-stream-consumer
+    runtime: docker
+    plan: free
+    # Same region as the Flag Service: snapshot requests and Redis round trips
+    # stay short, and Render has no India region (Singapore is nearest).
+    region: singapore
+    # Standalone repository, so the build context is the repo root.
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    # /health always answers 200, even while Redis is down, so a stream outage
+    # does not make Render recycle an instance that still serves cached flags.
+    # Inspect the "status" and "redis" fields to tell the two states apart.
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      # Must be the same Redis instance the Flag Service publishes to
+      # (Upstash or otherwise). SPRING_DATA_REDIS_URL is also accepted.
+      - key: REDIS_URL
+        sync: false
+      # Public URL of the deployed Flag Service, for example
+      # https://flag-service.onrender.com — no trailing slash needed.
+      - key: FLAGS_SERVICE_URL
+        sync: false
+      # Tenant and service account created through the Flag Service API.
+      # All three are required together, or startup fails fast.
+      - key: FLAGS_TENANT_ID
+        sync: false
+      - key: FLAGS_USERNAME
+        sync: false
+      - key: FLAGS_PASSWORD
+        sync: false
+      # Bounds the gap left by a missed Pub/Sub message (also the snapshot
+      # refresh interval). Five minutes matches the documented default.
+      - key: FLAGS_SNAPSHOT_REFRESH_MS
+        value: "300000"
+      # Free instances have 512 MB. Keep the JVM inside that budget without
+      # hardcoding a heap size the platform might outgrow.
+      - key: JAVA_TOOL_OPTIONS
+        value: "-XX:MaxRAMPercentage=70 -XX:+UseSerialGC"

@@ -233,6 +233,27 @@ flag-consumer:
     - redis
 ```
 
+### Render
+
+`render.yaml` deploys this repository as a Docker web service on the free plan
+in Singapore, next to the Flag Service.
+
+1. Create a new Blueprint from this repo and sync it.
+2. Fill in the prompted values: `REDIS_URL`, `FLAGS_SERVICE_URL`,
+   `FLAGS_TENANT_ID`, `FLAGS_USERNAME`, `FLAGS_PASSWORD`.
+3. Deploy. Render injects `PORT`; the app binds it automatically.
+
+The health check is `/health`, which stays `200` while Redis is unreachable so
+Render keeps the instance alive for cached reads. Use `status` in the response
+to distinguish `ok` from `degraded`.
+
+If the Flag Service is on a different Render region, snapshot latency is paid
+once per refresh interval, not per request.
+
+The free plan spins the instance down after inactivity. On wake the cache is
+rebuilt from the snapshot, so keep `FLAGS_SERVICE_URL` and the service account
+configured — event-only mode would come back empty.
+
 ---
 
 ## Connect it to the Flag Service
