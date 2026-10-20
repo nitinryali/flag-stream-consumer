@@ -214,52 +214,6 @@ java -jar target/flag-stream-consumer-0.0.1-SNAPSHOT.jar
 Java 21+ is required. The service starts with no configuration at all and looks
 for Redis on `localhost:6379`.
 
-### Configuration
-
-| Variable                    | Default                  | Meaning                                               |
-| --------------------------- | ------------------------ | ----------------------------------------------------- |
-| `SERVER_PORT` / `PORT`      | `8002`                   | HTTP listen port                                      |
-| `SPRING_DATA_REDIS_URL`     | `redis://localhost:6379` | Redis carrying `flag-updates` (`rediss://` for TLS)   |
-| `REDIS_URL`                 | `redis://localhost:6379` | Alias for the above; `SPRING_DATA_REDIS_URL` wins     |
-| `FLAG_CHANNEL`              | `flag-updates`           | Channel to subscribe to                               |
-| `FLAGS_TENANT_ID`           | —                        | Lock to one tenant; default for the HTTP API          |
-| `FLAGS_SERVICE_URL`         | —                        | Enables snapshot sync (e.g. `http://localhost:8001`)  |
-| `FLAGS_USERNAME`            | —                        | Service account for snapshot login                     |
-| `FLAGS_PASSWORD`            | —                        | Password for the service account                       |
-| `FLAGS_SNAPSHOT_REFRESH_MS` | `300000`                 | Snapshot refresh interval                              |
-
-`FLAGS_SERVICE_URL`, `FLAGS_TENANT_ID`, `FLAGS_USERNAME` and `FLAGS_PASSWORD`
-must be set together; startup fails fast otherwise. Keep the refresh interval
-below the Flag Service's JWT expiry (default `86400` seconds).
-
-The service account flow — create a tenant, create a tenant-bound user, then log
-in — is described in the Flag Service README.
-
-### Docker
-
-```bash
-docker build -t flag-stream-consumer .
-docker run --rm -p 8002:8002 \
-  -e REDIS_URL=redis://host.docker.internal:6379 \
-  flag-stream-consumer
-```
-
-Next to the Flag Service in Compose:
-
-```yaml
-flag-consumer:
-  build: ./flag-stream-consumer
-  ports:
-    - "8002:8002"
-  environment:
-    REDIS_URL: redis://redis:6379
-    FLAGS_TENANT_ID: ${FLAGS_TENANT_ID}
-    FLAGS_SERVICE_URL: http://flag-service:8001
-    FLAGS_USERNAME: acme-service
-    FLAGS_PASSWORD: ${FLAGS_PASSWORD}
-  depends_on:
-    - redis
-```
 
 ### Render
 
